@@ -50,6 +50,14 @@ export async function POST(req: NextRequest) {
     if (!isRealDate) {
       return NextResponse.json({ error: "Due date is invalid" }, { status: 400 });
     }
+    // Server clock is UTC; since IST (and most relevant timezones here) run
+    // ahead of UTC, comparing against the server's UTC "today" is always at
+    // least as permissive as the faculty member's local "today" — it will
+    // never reject a legitimate same-day date, only genuinely past ones.
+    const serverTodayStr = new Date().toISOString().slice(0, 10);
+    if (dueDate < serverTodayStr) {
+      return NextResponse.json({ error: "Due date can't be in the past" }, { status: 400 });
+    }
     dueDateValue = dueDate;
   }
 
