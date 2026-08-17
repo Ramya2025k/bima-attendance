@@ -32,13 +32,34 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Only PDF files are allowed" }, { status: 400 });
   }
 
+  let dueDateValue: string | null = null;
+  if (dueDate) {
+    const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(dueDate);
+    const year = match ? Number(match[1]) : NaN;
+    const month = match ? Number(match[2]) : NaN;
+    const day = match ? Number(match[3]) : NaN;
+    const isRealDate =
+      !!match &&
+      year >= 2020 &&
+      year <= 2099 &&
+      month >= 1 &&
+      month <= 12 &&
+      day >= 1 &&
+      day <= 31 &&
+      !isNaN(new Date(year, month - 1, day).getTime());
+    if (!isRealDate) {
+      return NextResponse.json({ error: "Due date is invalid" }, { status: 400 });
+    }
+    dueDateValue = dueDate;
+  }
+
   const buffer = Buffer.from(await file.arrayBuffer());
   const connection = await getConnection();
 
   try {
     await connection.query(
       "INSERT INTO assignments (subject_id, faculty_id, title, description, due_date, pdf_filename, pdf_data) VALUES (?, ?, ?, ?, ?, ?, ?)",
-      [subjectId, payload.id, title, description || null, dueDate || null, file.name, buffer]
+      [subjectId, payload.id, title, description || null, dueDateValue, file.name, buffer]
     );
 
     return NextResponse.json({ message: "Assignment posted successfully" });

@@ -155,6 +155,17 @@ export default function FacultyDashboard() {
       setAssignMsg("Only PDF files are allowed");
       return;
     }
+    if (assignDueDate && !/^\d{4}-\d{2}-\d{2}$/.test(assignDueDate)) {
+      setAssignMsg("Due date looks invalid — please re-pick it from the calendar");
+      return;
+    }
+    if (assignDueDate) {
+      const year = Number(assignDueDate.slice(0, 4));
+      if (year < 2020 || year > 2099) {
+        setAssignMsg("Due date year looks off — please re-pick it from the calendar");
+        return;
+      }
+    }
     setPosting(true);
     const formData = new FormData();
     formData.append("subjectId", assignSubjectId);
@@ -364,6 +375,8 @@ export default function FacultyDashboard() {
               type="date"
               value={assignDueDate}
               onChange={(e) => setAssignDueDate(e.target.value)}
+              min="2020-01-01"
+              max="2099-12-31"
               className="w-full mb-3 px-3 py-2 rounded-lg bg-background border border-border-color text-text-primary text-sm outline-none focus:border-brand"
             />
 
