@@ -17,6 +17,15 @@ function parseDueDate(value: string | null | undefined): Date | null {
   return isNaN(date.getTime()) ? null : date;
 }
 
+// A due date's whole day counts as "still open" — the deadline only passes
+// at the end of that day (23:59:59.999), not at midnight when it starts.
+function isDeadlinePassed(value: string | null | undefined): boolean {
+  const due = parseDueDate(value);
+  if (!due) return false;
+  due.setHours(23, 59, 59, 999);
+  return due.getTime() < Date.now();
+}
+
 export default function StudentDashboard() {
   const router = useRouter();
   const [token, setToken] = useState<string | null>(null);
@@ -240,7 +249,8 @@ export default function StudentDashboard() {
             {assignments.map((a: any) => {
               const isSubmitted = !!a.submission_id;
               const dueDateObj = parseDueDate(a.due_date);
-              const isOverdue = !!dueDateObj && dueDateObj < new Date() && !isSubmitted;
+              const deadlinePassed = isDeadlinePassed(a.due_date);
+              const isOverdue = deadlinePassed && !isSubmitted;
               return (
                 <div key={a.id} className="bg-card border border-border-color rounded-xl p-5">
                   <div className="flex items-start justify-between mb-2">
@@ -284,7 +294,11 @@ export default function StudentDashboard() {
                     </div>
                   ) : (
                     <div className="mt-3 pt-3 border-t border-border-color">
-                      {uploadingId === a.id ? (
+                      {deadlinePassed ? (
+                        <p className="text-xs text-danger">
+                          Deadline passed — submission is closed for this assignment.
+                        </p>
+                      ) : uploadingId === a.id ? (
                         <div className="flex items-center gap-2">
                           <input
                             type="file"

@@ -37,6 +37,32 @@ export async function POST(req: NextRequest) {
   const connection = await getConnection();
 
   try {
+    const [assignmentRows]: any = await connection.query(
+      "SELECT DATE_FORMAT(due_date, '%Y-%m-%d') AS due_date FROM assignments WHERE id = ?",
+      [assignmentId]
+    );
+
+    if (assignmentRows.length === 0) {
+      return NextResponse.json({ error: "Assignment not found" }, { status: 404 });
+    }
+
+    const dueDate: string | null = assignmentRows[0].due_date;
+    if (dueDate) {
+      const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(dueDate);
+      if (match) {
+        const [, y, m, d] = match;
+        // Treat the whole due day as still open by comparing against the
+        // end of that day (23:59:59.999), not midnight.
+        const deadline = new Date(Number(y), Number(m) - 1, Number(d), 23, 59, 59, 999);
+        if (deadline.getTime() < Date.now()) {
+          return NextResponse.json(
+            { error: "The deadline for this assignment has passed. Submission is closed." },
+            { status: 403 }
+          );
+        }
+      }
+    }
+
     await connection.query(
       `INSERT INTO submissions (assignment_id, student_id, pdf_filename, pdf_data)
        VALUES (?, ?, ?, ?)
