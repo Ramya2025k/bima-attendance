@@ -1,7 +1,9 @@
 ﻿"use client";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 export default function RegisterPage() {
+  const router = useRouter();
   const [regNo, setRegNo] = useState("");
   const [name, setName] = useState("");
   const [regChecked, setRegChecked] = useState(false);
@@ -34,7 +36,7 @@ export default function RegisterPage() {
     });
     const data = await res.json();
     if (!res.ok) {
-      setError(data.error || "UUCMS number not recognized");
+      setError(data.error || "Registration number not recognized");
       return;
     }
     setName(data.name);
@@ -103,108 +105,123 @@ export default function RegisterPage() {
         <p className="text-lg font-medium text-text-primary mb-1">Create account</p>
         <p className="text-sm text-text-secondary mb-6">Enter your UUCMS number to begin</p>
 
-        <label className={labelStyle}>UUCMS number</label>
-        <input
-          type="text"
-          value={regNo}
-          onChange={(e) => setRegNo(e.target.value)}
-          disabled={regChecked}
-          className={inputStyle}
-        />
-
-        {!regChecked && (
-          <button onClick={checkRegNo} className="w-full py-2 rounded-lg bg-brand text-background font-medium mb-3">
-            Verify UUCMS number
-          </button>
-        )}
-
-        {regChecked && (
+        {!success && (
           <>
-            <label className={labelStyle}>Name</label>
-            <input type="text" value={name} readOnly className={inputStyle + " opacity-70"} />
-
-            <label className={labelStyle}>Email</label>
+            <label className={labelStyle}>UUCMS number</label>
             <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              disabled={emailVerified}
+              type="text"
+              value={regNo}
+              onChange={(e) => setRegNo(e.target.value)}
+              disabled={regChecked}
               className={inputStyle}
             />
-            {email && !emailValid && <p className="text-danger text-xs -mt-2 mb-3">Enter a valid email address</p>}
 
-            {!otpSent && emailValid && (
-              <button onClick={sendOtp} className="w-full py-2 rounded-lg bg-brand text-background font-medium mb-3">
-                Send OTP
+            {!regChecked && (
+              <button onClick={checkRegNo} className="w-full py-2 rounded-lg bg-brand text-background font-medium mb-3">
+                Verify registration number
               </button>
             )}
 
-            {otpSent && !emailVerified && (
+            {regChecked && (
               <>
-                <label className={labelStyle}>Enter OTP</label>
+                <label className={labelStyle}>Name</label>
+                <input type="text" value={name} readOnly className={inputStyle + " opacity-70"} />
+
+                <label className={labelStyle}>Email</label>
                 <input
-                  type="text"
-                  value={otp}
-                  onChange={(e) => setOtp(e.target.value)}
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  disabled={emailVerified}
                   className={inputStyle}
-                  placeholder="6-digit code"
                 />
-                <button onClick={verifyOtp} className="w-full py-2 rounded-lg bg-brand text-background font-medium mb-3">
-                  Verify OTP
-                </button>
+                {email && !emailValid && <p className="text-danger text-xs -mt-2 mb-3">Enter a valid email address</p>}
+
+                {!otpSent && emailValid && (
+                  <button onClick={sendOtp} className="w-full py-2 rounded-lg bg-brand text-background font-medium mb-3">
+                    Send OTP
+                  </button>
+                )}
+
+                {otpSent && !emailVerified && (
+                  <>
+                    <label className={labelStyle}>Enter OTP</label>
+                    <input
+                      type="text"
+                      value={otp}
+                      onChange={(e) => setOtp(e.target.value)}
+                      className={inputStyle}
+                      placeholder="6-digit code"
+                    />
+                    <button onClick={verifyOtp} className="w-full py-2 rounded-lg bg-brand text-background font-medium mb-3">
+                      Verify OTP
+                    </button>
+                  </>
+                )}
+
+                {emailVerified && (
+                  <form onSubmit={handleRegister}>
+                    <label className={labelStyle}>Mobile number</label>
+                    <input
+                      type="tel"
+                      value={mobile}
+                      onChange={(e) => setMobile(e.target.value)}
+                      className={inputStyle}
+                    />
+                    {mobile && !mobileValid && (
+                      <p className="text-danger text-xs -mt-2 mb-3">Enter a valid 10-digit mobile number</p>
+                    )}
+
+                    <label className={labelStyle}>Password</label>
+                    <div className="relative mb-1">
+                      <input
+                        type={showPassword ? "text" : "password"}
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        className={inputStyle + " pr-16"}
+                      />
+                      <span
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-3 top-2 text-xs text-brand-light cursor-pointer"
+                      >
+                        {showPassword ? "Hide" : "Show"}
+                      </span>
+                    </div>
+                    {password && !passwordStrong && (
+                      <p className="text-warning text-xs mb-3">Use at least 8 characters including a number</p>
+                    )}
+
+                    <label className={labelStyle}>Confirm password</label>
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      className={inputStyle}
+                    />
+
+                    <button type="submit" className="w-full py-2 rounded-lg bg-brand text-background font-medium">
+                      Register
+                    </button>
+                  </form>
+                )}
               </>
             )}
 
-            {emailVerified && (
-              <form onSubmit={handleRegister}>
-                <label className={labelStyle}>Mobile number</label>
-                <input
-                  type="tel"
-                  value={mobile}
-                  onChange={(e) => setMobile(e.target.value)}
-                  className={inputStyle}
-                />
-                {mobile && !mobileValid && (
-                  <p className="text-danger text-xs -mt-2 mb-3">Enter a valid 10-digit mobile number</p>
-                )}
-
-                <label className={labelStyle}>Password</label>
-                <div className="relative mb-1">
-                  <input
-                    type={showPassword ? "text" : "password"}
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className={inputStyle + " pr-16"}
-                  />
-                  <span
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-2 text-xs text-brand-light cursor-pointer"
-                  >
-                    {showPassword ? "Hide" : "Show"}
-                  </span>
-                </div>
-                {password && !passwordStrong && (
-                  <p className="text-warning text-xs mb-3">Use at least 8 characters including a number</p>
-                )}
-
-                <label className={labelStyle}>Confirm password</label>
-                <input
-                  type={showPassword ? "text" : "password"}
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  className={inputStyle}
-                />
-
-                <button type="submit" className="w-full py-2 rounded-lg bg-brand text-background font-medium">
-                  Register
-                </button>
-              </form>
-            )}
+            {error && <p className="text-danger text-sm mt-3">{error}</p>}
           </>
         )}
 
-        {error && <p className="text-danger text-sm mt-3">{error}</p>}
-        {success && <p className="text-success text-sm mt-3">{success}</p>}
+        {success && (
+          <>
+            <p className="text-success text-sm mb-4">{success}</p>
+            <button
+              onClick={() => router.push("/")}
+              className="w-full py-2 rounded-lg bg-brand text-background font-medium"
+            >
+              Back to login
+            </button>
+          </>
+        )}
       </div>
     </div>
   );

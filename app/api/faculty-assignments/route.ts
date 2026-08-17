@@ -21,7 +21,7 @@ export async function GET(req: NextRequest) {
 
   try {
     const [rows] = await connection.query(
-      `SELECT a.id, a.title, a.description, a.due_date, a.pdf_filename, a.created_at,
+      `SELECT a.id, a.title, a.description, DATE_FORMAT(a.due_date, '%Y-%m-%d') AS due_date, a.pdf_filename, a.created_at,
               s.subject_name,
               (SELECT COUNT(*) FROM submissions WHERE assignment_id = a.id) AS submission_count
        FROM assignments a

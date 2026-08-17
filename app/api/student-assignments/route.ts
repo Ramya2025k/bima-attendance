@@ -32,7 +32,7 @@ export async function GET(req: NextRequest) {
     const semester = studentRows[0].semester;
 
     const [rows] = await connection.query(
-      `SELECT a.id, a.title, a.description, a.due_date, a.pdf_filename, a.created_at,
+      `SELECT a.id, a.title, a.description, DATE_FORMAT(a.due_date, '%Y-%m-%d') AS due_date, a.pdf_filename, a.created_at,
               s.subject_name,
               sub.id AS submission_id, sub.pdf_filename AS submission_filename, sub.submitted_at
        FROM assignments a

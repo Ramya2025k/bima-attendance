@@ -5,6 +5,18 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsive
 
 type StuTab = "attendance" | "assignments";
 
+// Parses a "YYYY-MM-DD" date safely in local time (avoids the UTC-midnight
+// shift you get from `new Date("YYYY-MM-DD")`) and returns null instead of
+// an invalid Date if the value is missing or malformed.
+function parseDueDate(value: string | null | undefined): Date | null {
+  if (!value) return null;
+  const match = /^(\d{4})-(\d{2})-(\d{2})/.exec(value);
+  if (!match) return null;
+  const [, y, m, d] = match;
+  const date = new Date(Number(y), Number(m) - 1, Number(d));
+  return isNaN(date.getTime()) ? null : date;
+}
+
 export default function StudentDashboard() {
   const router = useRouter();
   const [token, setToken] = useState<string | null>(null);
@@ -83,8 +95,9 @@ export default function StudentDashboard() {
     if (token) loadAssignments(token);
   }
 
-  function daysLeft(dueDate: string) {
-    const due = new Date(dueDate);
+  function daysLeft(dueDate: string): number | null {
+    const due = parseDueDate(dueDate);
+    if (!due) return null;
     const now = new Date();
     due.setHours(23, 59, 59, 999);
     const diffMs = due.getTime() - now.getTime();
@@ -106,8 +119,8 @@ export default function StudentDashboard() {
   }));
 
   const upcomingAssignments = assignments
-    .filter((a: any) => a.due_date && !a.submission_id)
-    .sort((a: any, b: any) => new Date(a.due_date).getTime() - new Date(b.due_date).getTime())
+    .filter((a: any) => parseDueDate(a.due_date) && !a.submission_id)
+    .sort((a: any, b: any) => parseDueDate(a.due_date)!.getTime() - parseDueDate(b.due_date)!.getTime())
     .slice(0, 5);
 
   return (
@@ -197,6 +210,7 @@ export default function StudentDashboard() {
             <div className="flex flex-col gap-2">
               {upcomingAssignments.map((a: any) => {
                 const left = daysLeft(a.due_date);
+                if (left === null) return null;
                 return (
                   <div key={a.id} className="flex items-center justify-between py-2 border-t border-border-color first:border-t-0 first:pt-0">
                     <div>
@@ -225,16 +239,17 @@ export default function StudentDashboard() {
             )}
             {assignments.map((a: any) => {
               const isSubmitted = !!a.submission_id;
-              const isOverdue = a.due_date && new Date(a.due_date) < new Date() && !isSubmitted;
+              const dueDateObj = parseDueDate(a.due_date);
+              const isOverdue = !!dueDateObj && dueDateObj < new Date() && !isSubmitted;
               return (
                 <div key={a.id} className="bg-card border border-border-color rounded-xl p-5">
                   <div className="flex items-start justify-between mb-2">
                     <div>
                       <p className="text-text-primary font-medium">{a.title}</p>
                       <p className="text-xs text-text-secondary">{a.subject_name}</p>
-                      {a.due_date && (
+                      {dueDateObj && (
                         <p className={"text-xs mt-1 " + (isOverdue ? "text-danger" : "text-text-secondary")}>
-                          Due: {new Date(a.due_date).toLocaleDateString()}
+                          Due: {dueDateObj.toLocaleDateString()}
                         </p>
                       )}
                       {a.description && (

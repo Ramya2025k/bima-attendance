@@ -5,6 +5,18 @@ import { ClipboardList, FileText } from "lucide-react";
 
 type Tab = "attendance" | "assignments";
 
+// Parses a "YYYY-MM-DD" date safely in local time (avoids the UTC-midnight
+// shift you get from `new Date("YYYY-MM-DD")`) and never returns "Invalid Date".
+function formatDueDate(value: string | null | undefined): string {
+  if (!value) return "";
+  const match = /^(\d{4})-(\d{2})-(\d{2})/.exec(value);
+  if (!match) return "";
+  const [, y, m, d] = match;
+  const date = new Date(Number(y), Number(m) - 1, Number(d));
+  if (isNaN(date.getTime())) return "";
+  return date.toLocaleDateString();
+}
+
 export default function FacultyDashboard() {
   const router = useRouter();
   const [token, setToken] = useState<string | null>(null);
@@ -391,7 +403,7 @@ export default function FacultyDashboard() {
                     <p className="text-sm font-medium text-text-primary">{a.title}</p>
                     <p className="text-xs text-text-secondary mt-0.5">
                       {a.subject_name}
-                      {a.due_date ? " · Due " + new Date(a.due_date).toLocaleDateString() : ""}
+                      {a.due_date ? " · Due " + formatDueDate(a.due_date) : ""}
                     </p>
                     {a.description && (
                       <p className="text-xs text-text-secondary mt-2">{a.description}</p>
