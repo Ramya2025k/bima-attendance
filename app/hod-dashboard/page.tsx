@@ -11,6 +11,8 @@ import {
   Percent,
   BookOpen,
   LogOut,
+  Menu,
+  X,
 } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 
@@ -23,6 +25,7 @@ export default function HodDashboard() {
   const [token, setToken] = useState<string | null>(null);
   const [hodName, setHodName] = useState("");
   const [tab, setTab] = useState<Tab>("overview");
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [data, setData] = useState<any>(null);
   const [error, setError] = useState("");
   const [actionMsg, setActionMsg] = useState("");
@@ -31,14 +34,13 @@ export default function HodDashboard() {
   const [subjectType, setSubjectType] = useState("theory");
   const [subjectFacultyId, setSubjectFacultyId] = useState("");
   const [subjectMsg, setSubjectMsg] = useState("");
+  const [lookedUpFacultyName, setLookedUpFacultyName] = useState("");
 
   const [facultyId, setFacultyId] = useState("");
   const [facultyName, setFacultyName] = useState("");
   const [facultyPassword, setFacultyPassword] = useState("");
   const [facultyMsg, setFacultyMsg] = useState("");
   const [facultyList, setFacultyList] = useState<any[]>([]);
-
-  const [lookedUpFacultyName, setLookedUpFacultyName] = useState("");
 
   const [students, setStudents] = useState<any[]>([]);
   const [studentsMsg, setStudentsMsg] = useState("");
@@ -240,6 +242,11 @@ export default function HodDashboard() {
     router.push("/");
   }
 
+  function selectTab(t: Tab) {
+    setTab(t);
+    setSidebarOpen(false);
+  }
+
   const inputStyle =
     "w-full mb-3 px-3 py-2.5 rounded-lg bg-[#0B0D12] border border-[#262A35] text-[#F3F4F6] text-sm outline-none focus:border-[#6366F1] transition-colors";
 
@@ -261,24 +268,56 @@ export default function HodDashboard() {
   })) || [];
 
   return (
-    <div className="min-h-screen bg-[#0B0D12] flex">
+    <div className="min-h-screen bg-[#0B0D12]">
+      {/* Mobile top bar */}
+      <div className="md:hidden flex items-center justify-between px-4 py-3 border-b border-[#262A35] bg-[#12141B]">
+        <div className="flex items-center gap-2">
+          <div className="w-7 h-7 rounded-lg bg-[#6366F1] flex items-center justify-center">
+            <GraduationCap size={16} className="text-white" />
+          </div>
+          <p className="text-[#F3F4F6] font-semibold text-sm">Bima Attendance</p>
+        </div>
+        <button onClick={() => setSidebarOpen(true)} className="text-[#F3F4F6] p-1">
+          <Menu size={22} />
+        </button>
+      </div>
+
+      {/* Mobile overlay */}
+      {sidebarOpen && (
+        <div
+          className="md:hidden fixed inset-0 bg-black/60 z-40"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
       {/* Sidebar */}
-      <div className="w-60 bg-[#12141B] border-r border-[#262A35] flex flex-col p-4 fixed h-screen">
-        <div className="flex items-center gap-2 px-2 mb-8 mt-2">
-          <div className="w-8 h-8 rounded-lg bg-[#6366F1] flex items-center justify-center">
-            <GraduationCap size={18} className="text-white" />
+      <div
+        className={
+          "w-60 bg-[#12141B] border-r border-[#262A35] flex flex-col p-4 fixed h-screen z-50 transition-transform duration-200 " +
+          (sidebarOpen ? "translate-x-0" : "-translate-x-full") +
+          " md:translate-x-0"
+        }
+      >
+        <div className="flex items-center justify-between px-2 mb-8 mt-2">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-lg bg-[#6366F1] flex items-center justify-center">
+              <GraduationCap size={18} className="text-white" />
+            </div>
+            <div>
+              <p className="text-[#F3F4F6] font-semibold text-sm leading-tight">Bima Attendance</p>
+              <p className="text-[#9CA3AF] text-xs leading-tight">HOD — {hodName} Sir</p>
+            </div>
           </div>
-          <div>
-            <p className="text-[#F3F4F6] font-semibold text-sm leading-tight">Bima Attendance</p>
-            <p className="text-[#9CA3AF] text-xs leading-tight">HOD — {hodName} Sir</p>
-          </div>
+          <button onClick={() => setSidebarOpen(false)} className="md:hidden text-[#9CA3AF] p-1">
+            <X size={18} />
+          </button>
         </div>
 
         <nav className="flex flex-col gap-1 flex-1">
           {navItems.map(({ key, label, icon: Icon }) => (
             <button
               key={key}
-              onClick={() => setTab(key)}
+              onClick={() => selectTab(key)}
               className={
                 "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors text-left " +
                 (tab === key
@@ -302,7 +341,7 @@ export default function HodDashboard() {
       </div>
 
       {/* Main content */}
-      <div className="ml-60 flex-1 p-8">
+      <div className="md:ml-60 flex-1 p-4 md:p-8">
         {tab === "overview" && (
           <>
             {!data ? (
@@ -312,7 +351,7 @@ export default function HodDashboard() {
                 <p className="text-xl font-semibold text-[#F3F4F6] mb-1">Welcome, {hodName} Sir</p>
                 <p className="text-sm text-[#9CA3AF] mb-6">MCA Department · Semester 2 Overview</p>
 
-                <div className="grid grid-cols-3 gap-4 mb-8">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
                   <div className="bg-[#161922] border border-[#262A35] rounded-xl p-5">
                     <div className="w-9 h-9 rounded-lg bg-[#6366F1]/15 flex items-center justify-center mb-3">
                       <Users size={18} className="text-[#6366F1]" />
@@ -342,8 +381,8 @@ export default function HodDashboard() {
                     <ResponsiveContainer width="100%" height={220}>
                       <BarChart data={chartData}>
                         <CartesianGrid strokeDasharray="3 3" stroke="#262A35" vertical={false} />
-                        <XAxis dataKey="name" stroke="#9CA3AF" fontSize={12} />
-                        <YAxis stroke="#9CA3AF" fontSize={12} domain={[0, 100]} />
+                        <XAxis dataKey="name" stroke="#9CA3AF" fontSize={11} />
+                        <YAxis stroke="#9CA3AF" fontSize={11} domain={[0, 100]} />
                         <Tooltip
                           contentStyle={{ background: "#12141B", border: "1px solid #262A35", borderRadius: 8, fontSize: 12 }}
                           labelStyle={{ color: "#F3F4F6" }}
@@ -355,7 +394,7 @@ export default function HodDashboard() {
                 )}
 
                 {actionMsg && <p className="text-xs text-[#EF4444] mb-2">{actionMsg}</p>}
-                <div className="grid grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="bg-[#161922] border border-[#262A35] rounded-xl p-5">
                     <p className="text-sm font-medium text-[#F3F4F6] mb-3">Subjects</p>
                     <div className="flex flex-col gap-2">
@@ -403,7 +442,7 @@ export default function HodDashboard() {
           <>
             <p className="text-xl font-semibold text-[#F3F4F6] mb-6">Students</p>
             {studentsMsg && <p className="text-xs text-[#EF4444] mb-3">{studentsMsg}</p>}
-            <div className="bg-[#161922] border border-[#262A35] rounded-xl overflow-hidden">
+            <div className="bg-[#161922] border border-[#262A35] rounded-xl overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="text-[#9CA3AF] text-left bg-[#12141B]">
@@ -419,11 +458,11 @@ export default function HodDashboard() {
                   )}
                   {students.map((s: any) => (
                     <tr key={s.id} className="border-t border-[#262A35]">
-                      <td className="px-5 py-3 text-[#F3F4F6]">{s.reg_no}</td>
-                      <td className="px-5 py-3 text-[#F3F4F6]">{s.name}</td>
+                      <td className="px-5 py-3 text-[#F3F4F6] whitespace-nowrap">{s.reg_no}</td>
+                      <td className="px-5 py-3 text-[#F3F4F6] whitespace-nowrap">{s.name}</td>
                       <td className="px-5 py-3">
                         <span className={
-                          "px-2 py-0.5 rounded-full text-xs " +
+                          "px-2 py-0.5 rounded-full text-xs whitespace-nowrap " +
                           (s.status === "working" ? "bg-[#F59E0B]/15 text-[#F59E0B]" : "bg-[#22C55E]/15 text-[#22C55E]")
                         }>
                           {s.status}
@@ -432,7 +471,7 @@ export default function HodDashboard() {
                       <td className="px-5 py-3 text-right">
                         <button
                           onClick={() => toggleStatus(s.id, s.status)}
-                          className="px-3 py-1 rounded-lg bg-[#0B0D12] border border-[#262A35] text-[#F3F4F6] text-xs hover:border-[#6366F1] transition-colors"
+                          className="px-3 py-1 rounded-lg bg-[#0B0D12] border border-[#262A35] text-[#F3F4F6] text-xs hover:border-[#6366F1] transition-colors whitespace-nowrap"
                         >
                           Mark as {s.status === "working" ? "active" : "working"}
                         </button>
@@ -449,7 +488,7 @@ export default function HodDashboard() {
           <>
             <p className="text-xl font-semibold text-[#F3F4F6] mb-6">Classes held</p>
 
-            <div className="flex gap-3 mb-6">
+            <div className="flex flex-col sm:flex-row gap-3 mb-6">
               <select
                 value={classesSubject || ""}
                 onChange={(e) => setClassesSubject(Number(e.target.value))}
@@ -477,7 +516,7 @@ export default function HodDashboard() {
                   <p className="text-2xl font-semibold text-[#F3F4F6]">{classesData.totalClassesHeld}</p>
                 </div>
 
-                <div className="bg-[#161922] border border-[#262A35] rounded-xl overflow-hidden">
+                <div className="bg-[#161922] border border-[#262A35] rounded-xl overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="text-[#9CA3AF] text-left bg-[#12141B]">
@@ -491,8 +530,8 @@ export default function HodDashboard() {
                       )}
                       {classesData.log.map((row: any, i: number) => (
                         <tr key={i} className="border-t border-[#262A35]">
-                          <td className="px-5 py-3 text-[#F3F4F6]">{row.date}</td>
-                          <td className="px-5 py-3 text-right text-[#F3F4F6]">{row.present} / {row.total}</td>
+                          <td className="px-5 py-3 text-[#F3F4F6] whitespace-nowrap">{row.date}</td>
+                          <td className="px-5 py-3 text-right text-[#F3F4F6] whitespace-nowrap">{row.present} / {row.total}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -556,19 +595,19 @@ export default function HodDashboard() {
             </div>
 
             <p className="text-sm font-medium text-[#F3F4F6] mb-3">All faculty</p>
-            <div className="bg-[#161922] border border-[#262A35] rounded-xl overflow-hidden max-w-lg">
+            <div className="bg-[#161922] border border-[#262A35] rounded-xl overflow-x-auto max-w-lg">
               <table className="w-full text-sm">
                 <tbody>
                   {facultyList.map((f: any) => (
                     <tr key={f.id} className="border-t border-[#262A35] first:border-t-0">
-                      <td className="px-5 py-3 text-[#F3F4F6]">{f.faculty_id}</td>
-                      <td className="px-5 py-3 text-[#F3F4F6]">{f.name}</td>
-                      <td className="px-5 py-3 text-[#9CA3AF]">{f.role}</td>
+                      <td className="px-5 py-3 text-[#F3F4F6] whitespace-nowrap">{f.faculty_id}</td>
+                      <td className="px-5 py-3 text-[#F3F4F6] whitespace-nowrap">{f.name}</td>
+                      <td className="px-5 py-3 text-[#9CA3AF] whitespace-nowrap">{f.role}</td>
                       <td className="px-5 py-3 text-right">
                         {f.role !== "hod" && (
                           <button
                             onClick={() => deleteFaculty(f.id)}
-                            className="px-3 py-1 rounded-lg bg-[#EF4444]/15 text-[#EF4444] text-xs font-medium hover:bg-[#EF4444]/25 transition-colors"
+                            className="px-3 py-1 rounded-lg bg-[#EF4444]/15 text-[#EF4444] text-xs font-medium hover:bg-[#EF4444]/25 transition-colors whitespace-nowrap"
                           >
                             Delete
                           </button>
