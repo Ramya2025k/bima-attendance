@@ -1,65 +1,108 @@
-import Image from "next/image";
+﻿"use client";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 
-export default function Home() {
+type Role = "student" | "faculty" | "hod";
+
+export default function LoginPage() {
+  const router = useRouter();
+  const [role, setRole] = useState<Role>("student");
+  const [regNo, setRegNo] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState("");
+
+  async function handleLogin(e: React.FormEvent) {
+    e.preventDefault();
+    setError("");
+    const res = await fetch("/api/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ regNo, password, role }),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      setError(data.error || "Login failed");
+      return;
+    }
+    localStorage.setItem("token", data.token);
+
+    if (role === "student") router.push("/student-dashboard");
+    else if (role === "faculty") router.push("/faculty-dashboard");
+    else router.push("/hod-dashboard");
+  }
+
+  const tabStyle = (active: boolean) =>
+    "flex-1 py-2 text-sm rounded-lg font-medium transition-colors " +
+    (active ? "bg-brand text-background" : "bg-background text-text-secondary border border-border-color");
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+    <div className="flex min-h-screen items-center justify-center bg-background">
+      <form onSubmit={handleLogin} className="w-full max-w-sm bg-card border border-border-color rounded-xl p-8">
+        <div className="flex flex-col items-center mb-6">
+          <img src="/college-logo.png" alt="College logo" className="w-20 h-20 object-contain mb-3" />
+          <p className="text-sm font-semibold text-text-primary text-center leading-tight">
+            Bangalore Integrated Management Academy
           </p>
+          <p className="text-xs text-text-secondary mt-1">MCA Attendance Portal</p>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+
+        <div className="flex gap-2 mb-6">
+          <button type="button" onClick={() => setRole("student")} className={tabStyle(role === "student")}>
+            Student
+          </button>
+          <button type="button" onClick={() => setRole("faculty")} className={tabStyle(role === "faculty")}>
+            Faculty
+          </button>
+          <button type="button" onClick={() => setRole("hod")} className={tabStyle(role === "hod")}>
+            HOD
+          </button>
+        </div>
+
+        <input
+          type="text"
+          placeholder={role === "student" ? "UUCMS number" : "Faculty ID"}
+          value={regNo}
+          onChange={(e) => setRegNo(e.target.value)}
+          className="w-full mb-4 px-3 py-2 rounded-lg bg-background border border-border-color text-text-primary"
+        />
+
+        <div className="relative mb-1">
+          <input
+            type={showPassword ? "text" : "password"}
+            placeholder="Password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="w-full px-3 py-2 pr-16 rounded-lg bg-background border border-border-color text-text-primary"
+          />
+          <span
+            onClick={() => setShowPassword(!showPassword)}
+            className="absolute right-3 top-2 text-xs text-brand-light cursor-pointer"
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
+            {showPassword ? "Hide" : "Show"}
+          </span>
+        </div>
+
+        <div className="text-right mb-4">
+          <a href="/forgot-password" className="text-xs text-text-secondary">
+            Forgot password?
           </a>
         </div>
-      </main>
+
+        {error && <p className="text-danger text-sm mb-4">{error}</p>}
+        <button type="submit" className="w-full py-2 rounded-lg bg-brand text-background font-medium">
+          Sign in
+        </button>
+
+        {role === "student" && (
+          <p className="text-sm text-text-secondary text-center mt-4">
+            New student?{" "}
+            <a href="/register" className="text-brand-light font-medium">
+              Register here
+            </a>
+          </p>
+        )}
+      </form>
     </div>
   );
 }
